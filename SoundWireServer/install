@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Get the primary local IP and Subnet (e.g., 192.168.1.0/24)
+# This looks at the route to the internet and finds the associated local network
+LOCAL_NET=$(ip -o -f inet addr show $(ip route | grep default | awk '{print $5}') | awk '{print $4}')
+
+if [ -z "$LOCAL_NET" ]; then
+    echo "Error: Could not detect local network."
+    exit 1
+fi
+
+echo "Detected Local Network: $LOCAL_NET"
+
+# Allow ALL traffic but ONLY from your detected local subnet
+# sudo ufw allow from "$LOCAL_NET" to port 59010:59011 proto udp
+
+echo "Firewall is now opened."
+sudo ufw status
+
+echo "Installing needed packages..."
+sudo apt install -y pavucontrol
+
+echo "Packages have been installed"
+
+echo "Installing SoundWireServer..."
+sudo mkdir -p /usr/bin/SoundWireServer
+sudo cp -r . /usr/bin/SoundWireServer/
+sudo cp /usr/bin/SoundWireServer/SoundWireServer-Server.desktop /usr/share/applications/
+
+echo "Setting up permissions..."
+sudo chmod +x /usr/bin/SoundWireServer/SoundWireServer
+sudo chmod 644 /usr/share/applications/SoundWireServer-Server.desktop
+sudo update-desktop-database /usr/share/applications/
+
+echo "SoundWireServer has been installed"
